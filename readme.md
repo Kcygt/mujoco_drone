@@ -1,8 +1,5 @@
 # mujoco_drone
 
-https://github.com/hg6185/MuJoCo/tree/main
-
-# Drone model
 
 ## Kinematics
 Rotors are arraged as shown:
