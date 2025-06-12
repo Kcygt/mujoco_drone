@@ -107,11 +107,14 @@ T=k\left(\omega_1^2+\omega_2^2+\omega_3^2+\omega_4^2\right) \\
 `$
 
 solving the system, we have:
+
 $`
+\begin{gathered}
  \omega_1^2=\frac{1}{4}\left(\frac{T}{k}-\frac{\tau_x}{k d}+\frac{\tau_y}{k d}+\frac{\tau_z}{b}\right) \\
  \omega_2^2=\frac{1}{4}\left(\frac{T}{k}-\frac{\tau_x}{k d}-\frac{\tau_y}{k d}-\frac{\tau_z}{b}\right) \\
  \omega_3^2=\frac{1}{4}\left(\frac{T}{k}+\frac{\tau_x}{k d}+\frac{\tau_y}{k d}-\frac{\tau_z}{b}\right) \\
  \omega_4^2=\frac{1}{4}\left(\frac{T}{k}+\frac{\tau_x}{k d}-\frac{\tau_y}{k d}+\frac{\tau_z}{b}\right)
+ \end{gathered}
 `$
 
 ## SE(3) control
