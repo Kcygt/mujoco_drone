@@ -85,6 +85,7 @@ $`
 The quadrotor has six states, three positions and three angles, but only four control inputs, the angular velocities of the four rotors. It is an underactuated system. 
 We can choose to control the total thrust and torques in its body frame. They can be easily mapped back to the four rotor speeds. 
 With the torques and total thrust in the body frame, we can design a simple controller to make the robot stabilise in the air: 
+
 $`
 \begin{aligned}
 T & =\left(g+K_{z, D}\left(\dot{z}_d-\dot{z}\right)+K_{z, P}\left(z_d-z\right)\right) \frac{m}{C_\phi C_\theta}, \\
