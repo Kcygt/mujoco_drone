@@ -37,29 +37,21 @@ k_f \sum_{i=1}^4 \omega_i^2
 \end{array}\right]
 `$
 
-
-
-$$
-\mathbf{\tau}^B
-=
-\left[\begin{array}{c}
+$`
+\tau^B=\left[\begin{array}{c}
 \tau_x \\
 \tau_y \\
 \tau_z
-\end{array}\right]
-=
-\left[\begin{array}{c}
+\end{array}\right]=\left[\begin{array}{c}
 -f_1 \cdot d-f_2 \cdot d+f_3 \cdot d+f_4 \cdot d \\
 f_1 \cdot d-f_2 \cdot d+f_3 \cdot d-f_4 \cdot d \\
 \tau_1-\tau_2-\tau_3+\tau_4
-\end{array}\right] 
-= 
-\left[\begin{array}{c}
-d k_f(-\omega_1^2 - \omega_2^2 + \omega_3^2 + \omega_4^2) \\
-d k_f(\omega_1^2 - \omega_2^2 + \omega_3^2 - \omega_4^2) \\
-k_\tau(\omega_1^2 - \omega_2^2 - \omega_3^2 + \omega_4^2)
+\end{array}\right]=\left[\begin{array}{c}
+d k_f\left(-\omega_1^2-\omega_2^2+\omega_3^2+\omega_4^2\right) \\
+d k_f\left(\omega_1^2-\omega_2^2+\omega_3^2-\omega_4^2\right) \\
+k_\tau\left(\omega_1^2-\omega_2^2-\omega_3^2+\omega_4^2\right)
 \end{array}\right]
-$$
+`$
 
 where $d$ is the distance from the rotor center to x-axis or y-aixs, here assuming they are the same.
 
@@ -67,54 +59,59 @@ where $d$ is the distance from the rotor center to x-axis or y-aixs, here assumi
 
 In the inertial frame, the acceleration of the quadrotor is due to thrust, gravity. We can obtain the thrust force in the inertial frame by using the rotation matrix $\mathbf{R}^I_{B}$ to map it from the body frame to the inertial frame. Thus, the linear part of the equation of motion is:
 
-$$
+$`
 m \ddot{\mathbf{p}}=\left[\begin{array}{c}
 0 \\
 0 \\
 -m g
-\end{array}\right]+ \mathbf{R}^{I}_{B} \mathbf{T}^B
-$$
+\end{array}\right]+\mathbf{R}_B^I \mathbf{T}^B
+`$
+
 where $\mathbf{p}$ is the position of the quadrotor in the inertial frame, $g$ is the gravity acceleration, and $\mathbf{T}^B$ is the thrust force in the body frame.
 
 While it is convenient to have the linear equations of motion in the inertial frame, the rotational equations of motion is simpler to derive in the body frame: 
-$$
-\mathbf{I}^B \dot{\mathbf{\omega}}^B+\mathbf{\omega}^B \times(\mathbf{I}^B \mathbf{\omega}^B)=\mathbf{\tau}^B
-$$
+
+$`
+\mathbf{I}^B \dot{\omega}^B+\omega^B \times\left(\mathbf{I}^B \omega^B\right)=\tau^B
+`$
 
 where $\omega^B$ is the angular velocity vector in the body frame, $I^B$ is the inertia matrix in the body frame, and $\tau^B$ is resultant torque from the rotors in the body frame. For drone with small angular velocity, it can be further simplifed since $\boldsymbol{\omega} \times(I \boldsymbol{\omega}) \approx 0$:
-$$
+
+$`
 \mathbf{I}^B \dot{\boldsymbol{\omega}}^B=\tau^B
-$$
+`$
 
 ## PD control
 The quadrotor has six states, three positions and three angles, but only four control inputs, the angular velocities of the four rotors. It is an underactuated system. 
 We can choose to control the total thrust and torques in its body frame. They can be easily mapped back to the four rotor speeds. 
 With the torques and total thrust in the body frame, we can design a simple controller to make the robot stabilise in the air: 
-$$
+$`
 \begin{aligned}
 T & =\left(g+K_{z, D}\left(\dot{z}_d-\dot{z}\right)+K_{z, P}\left(z_d-z\right)\right) \frac{m}{C_\phi C_\theta}, \\
 \tau_\phi & =\left(K_{\phi, D}\left(\dot{\phi}_d-\dot{\phi}\right)+K_{\phi, P}\left(\phi_d-\phi\right)\right) I_{x x}, \\
 \tau_\theta & =\left(K_{\theta, D}\left(\dot{\theta}_d-\dot{\theta}\right)+K_{\theta, P}\left(\theta_d-\theta\right)\right) I_{y y}, \\
 \tau_\psi & =\left(K_{\psi, D}\left(\dot{\psi}_d-\dot{\psi}\right)+K_{\psi, P}\left(\psi_d-\psi\right)\right) I_{z z},
 \end{aligned}
-$$
+`$
 
 The mapping between the control variable and rotor angular speeds can be derived as:
-$$
+
+$`
 \begin{gathered}
 T=k\left(\omega_1^2+\omega_2^2+\omega_3^2+\omega_4^2\right) \\
 \tau_x=k d\left(-\omega_1^2-\omega_2^2+\omega_3^2+\omega_4^2\right) \\
 \tau_y=k d\left(\omega_1^2-\omega_2^2+\omega_3^2-\omega_4^2\right) \\
 \tau_z=b\left(\omega_1^2-\omega_2^2-\omega_3^2+\omega_4^2\right)
 \end{gathered}
-$$
+`$
+
 solving the system, we have:
-$$
+$`
  \omega_1^2=\frac{1}{4}\left(\frac{T}{k}-\frac{\tau_x}{k d}+\frac{\tau_y}{k d}+\frac{\tau_z}{b}\right) \\
  \omega_2^2=\frac{1}{4}\left(\frac{T}{k}-\frac{\tau_x}{k d}-\frac{\tau_y}{k d}-\frac{\tau_z}{b}\right) \\
  \omega_3^2=\frac{1}{4}\left(\frac{T}{k}+\frac{\tau_x}{k d}+\frac{\tau_y}{k d}-\frac{\tau_z}{b}\right) \\
  \omega_4^2=\frac{1}{4}\left(\frac{T}{k}+\frac{\tau_x}{k d}-\frac{\tau_y}{k d}+\frac{\tau_z}{b}\right)
-$$
+`$
 
 ## SE(3) control
 
