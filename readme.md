@@ -21,7 +21,21 @@ $\tau_i$: torque created by the robot around its axis, $\tau_{i}=k_{\tau} \omega
 ### Force and Moments
 The resultant force applied to the body w.r.t. its own frame are:
 
-$$\mathbf{T}{}^B=\left[\begin{array}{c}0 \\ 0 \\ T\end{array}\right]=\left[\begin{array}{c}0 \\ 0 \\ \sum_{i=1}^4 f_i\end{array}\right]=\left[\begin{array}{c}0 \\ 0 \\ k_f \sum_{i=1}^4\omega_i^2\end{array}\right]$$
+$`
+\mathbf{T}^B=\left[\begin{array}{l}
+0 \\
+0 \\
+T
+\end{array}\right]=\left[\begin{array}{c}
+0 \\
+0 \\
+\sum_{i=1}^4 f_i
+\end{array}\right]=\left[\begin{array}{c}
+0 \\
+0 \\
+k_f \sum_{i=1}^4 \omega_i^2
+\end{array}\right]
+`$
 
 
 
@@ -96,12 +110,10 @@ T=k\left(\omega_1^2+\omega_2^2+\omega_3^2+\omega_4^2\right) \\
 $$
 solving the system, we have:
 $$
-
  \omega_1^2=\frac{1}{4}\left(\frac{T}{k}-\frac{\tau_x}{k d}+\frac{\tau_y}{k d}+\frac{\tau_z}{b}\right) \\
  \omega_2^2=\frac{1}{4}\left(\frac{T}{k}-\frac{\tau_x}{k d}-\frac{\tau_y}{k d}-\frac{\tau_z}{b}\right) \\
  \omega_3^2=\frac{1}{4}\left(\frac{T}{k}+\frac{\tau_x}{k d}+\frac{\tau_y}{k d}-\frac{\tau_z}{b}\right) \\
  \omega_4^2=\frac{1}{4}\left(\frac{T}{k}+\frac{\tau_x}{k d}-\frac{\tau_y}{k d}+\frac{\tau_z}{b}\right)
-
 $$
 
 ## SE(3) control
