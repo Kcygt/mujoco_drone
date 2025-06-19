@@ -34,10 +34,13 @@ class GamepadReader:
         ]
 
         self.axis_labels = [
-            "Left Stick X", "Left Stick Y", "LT",
-            "Right Stick X", "Right Stick Y",
-             "RT"  # These may show up as axis or button depending on mode
-        ]
+            "Left Stick X", 
+            "Left Stick Y", 
+            "LT",
+            "Right Stick X", 
+            "Right Stick Y",
+            "RT" 
+        ]  # These may show up as axis or button depending on mode
 
     def start(self):
         self._running = True
@@ -64,16 +67,21 @@ class GamepadReader:
         return self.button_states.copy()
 
     def print_state(self):
+        print(f"============ {self.joystick.get_name()} ============")
         print("=== Axis States ===")
-        for i, val in enumerate(self.axis_values):
-            label = self.axis_labels[i] if i < len(self.axis_labels) else f"Axis {i}"
-            print(f"{label}: {val:.3f}")
+        axis_states_str = ", ".join(
+            f"{self.axis_labels[i] if i < len(self.axis_labels) else f'Axis {i}'}: {val:.3f}"
+            for i, val in enumerate(self.axis_values)
+        )
+        print(axis_states_str)
 
         print("=== Button States ===")
-        for i, pressed in enumerate(self.button_states):
-            label = self.button_labels[i] if i < len(self.button_labels) else f"Button {i}"
-            state = "Pressed" if pressed else "Released"
-            print(f"{label}: {state}")
+        button_states_str = ", ".join(
+            f"{self.button_labels[i] if i < len(self.button_labels) else f'Button {i}'}: {'P' if pressed else '-'}"
+            for i, pressed in enumerate(self.button_states)
+        )
+        print(button_states_str)
+        print()
         
 if __name__ == "__main__":
     reader = GamepadReader(update_freq=20)

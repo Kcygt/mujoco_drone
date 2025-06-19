@@ -60,14 +60,20 @@ where $d$ is the distance from the rotor center to x-axis or y-aixs, here assumi
 In the inertial frame, the acceleration of the quadrotor is due to thrust, gravity. We can obtain the thrust force in the inertial frame by using the rotation matrix $\mathbf{R}^I_{B}$ to map it from the body frame to the inertial frame. Thus, the linear part of the equation of motion is:
 
 $`
-m \ddot{\mathbf{p}}=\left[\begin{array}{c}
-0 \\
-0 \\
--m g
-\end{array}\right]+\mathbf{R}_B^I \mathbf{T}^B
+m\ddot{\mathbf{p}} = \mathbf{f} + m\mathbf{g}
 `$
 
-where $\mathbf{p}$ is the position of the quadrotor in the inertial frame, $g$ is the gravity acceleration, and $\mathbf{T}^B$ is the thrust force in the body frame.
+$`
+m \ddot{\mathbf{p}}=
+\mathbf{R}_B^I \mathbf{f}^B + 
+m\left[\begin{array}{c}
+0 \\
+0 \\
+-g
+\end{array}\right]
+`$
+
+where $\mathbf{p}$ is the position of the quadrotor in the inertial frame, $g$ is the gravity acceleration, and $\mathbf{f}$ is the thrust force in inertia frame and $\mathbf{f}^B$ is the thrust force in the body frame.
 
 While it is convenient to have the linear equations of motion in the inertial frame, the rotational equations of motion is simpler to derive in the body frame: 
 
@@ -121,17 +127,59 @@ $`
 
 Lee, Taeyoung, Melvin Leok, and N. Harris McClamroch. "Geometric tracking control of a quadrotor UAV on SE (3)." 49th IEEE conference on decision and control (CDC). IEEE, 2010.
 
-1. Position Controller
+* Position Controller on SO(3)
 
-Defines desired thrust direction:
-
+Given desired position, we can calculate required acceleration to reach the target:
 $$
-f=-k_x e_x-k_v e_v+m g e_3-m \ddot{x}_d
+\mathbf{a}_{cmd} = k_p(\mathbf{p}^*-\mathbf{p})+k_d(\mathbf{v}^*-\mathbf{v})+\mathbf{a}^*
+$$
+based on the Newton's Equation:
+$$
+\mathbf{f}_{cmd} = m\mathbf{a}_{cmd} - m\mathbf{g}
 $$
 
-- $e_x=x-x_d, e_v=v-\dot{x}_d$
+then 
+$$
+\mathbf{f}_{cmd}^B = \mathbf{R}_I^B \mathbf{f}
+$$
+The thrust would be: 
+$$
+f = \mathbf{f}_{cmd}^B \cdot [0, 0, 1]^T
+$$
 
-2. Attitude Controller on SO(3)
+or can be simply the projection of $\mathbf{f}_{cmd}$ on to the $z$ axis of the body frame 
+$
+f = \mathbf{f}_{cmd} \cdot \mathbf{z}_B^I
+$
+
+* Attitude Controller on SO(3)
+
+The desired orientation is determined by the direction of the command force $\mathbf{f}_{cmd}$ and the desired heading direction $\mathbf{h}_d$, 
+
+The desired $z$ axis is simply the normalized thrust force: 
+$$
+\mathbf{z}_d = \hat{\mathbf{f}}_{cmd}
+$$
+
+The $y$ axis can be defined as: 
+$$
+\mathbf{y}_d = \mathbf{z}_d \times \hat{\mathbf{h}}_d 
+$$
+The $x$ axis is then defiend as: 
+$$
+\mathbf{x}_d = \mathbf{y}_d \times\mathbf{z}_d
+$$
+
+The final desired orientation matrix can be assembed as: 
+
+$`
+\mathbf{R}_d = \left[\begin{array}{ccc}
+\mid & \mid & \mid \\
+\mathbf{x}_d & \mathbf{y}_d & \mathbf{z}_d \\
+\mid & \mid & \mid
+\end{array}\right]
+`$
+
 
 Defines rotation error:
 

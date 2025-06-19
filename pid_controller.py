@@ -1,34 +1,21 @@
-class PDController:
-  def __init__(self, kp, kd, setpoint):
-    self.kp = kp
-    self.kd = kd
-    self.setpoint = setpoint
-    self.prev_error = 0
+from simple_pid import PID
 
-  def compute(self, measured_value, setpoint=None):
-    if setpoint is not None:
-      self.setpoint = setpoint
-    error = self.setpoint - measured_value
-    derivative = error - self.prev_error
-    output = (self.kp * error) + (self.kd * derivative)
-    self.prev_error = error
-    return output
+import numpy as np
+
 
 class PIDController:
-  def __init__(self, kp, ki, kd, setpoint):
-    self.kp = kp
-    self.ki = ki
-    self.kd = kd
-    self.setpoint = setpoint
-    self.prev_error = 0
-    self.integral = 0
+    def __init__(self, z_des=0.5, rpy_setpoint=[0,0,0], state_estimator=None):
+        self.state_estimator = state_estimator
+        self.pid_alt = PID(6, 0.5, 1.25, z_des)
+        self.pid_roll = PID(6, 0.5, 1.25, setpoint=rpy_setpoint[0], output_limits = (-1,1))
+        self.pid_pitch = PID(6, 0.5, 1.25, setpoint=rpy_setpoint[1], output_limits = (-1,1))
+        self.pid_yaw = PID(6, 0, 1.25, setpoint=rpy_setpoint[2], output_limits = (-3,3))
 
-  def compute(self, measured_value, setpoint=None):
-    if setpoint is not None:
-      self.setpoint = setpoint
-    error = self.setpoint - measured_value
-    self.integral += error
-    derivative = error - self.prev_error
-    output = (self.kp * error) + (self.ki * self.integral) + (self.kd * derivative)
-    self.prev_error = error
-    return output
+
+    def compute_control(self):
+        # Compute control signals based on the current state
+        thrust_total = (self.pid_alt(self.state_estimator.alt) + 9.81) * self.state_estimator.mass/(np.cos(self.state_estimator.roll) * np.cos(self.state_estimator.pitch))
+        torque_roll = self.pid_roll(self.state_estimator.roll)
+        torque_pitch = self.pid_pitch(self.state_estimator.pitch)
+        torque_yaw = self.pid_yaw(self.state_estimator.yaw)
+        return thrust_total, torque_roll, torque_pitch, torque_yaw
