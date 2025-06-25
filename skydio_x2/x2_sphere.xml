@@ -36,14 +36,14 @@
       <camera name="track" pos="-1 0 .5" xyaxes="0 -1 0 1 0 2" mode="trackcom"/>
       <site name="imu" pos="0 0 .02"/>
       <geom material="phong3SG" mesh="X2_lowpoly" class="visual" quat="0 0 1 1"/>
-      <!-- <geom name="visual_sphere" type="sphere" size=".38" pos="0.0 0 0.065"  rgba="1 0 0 0.2" contype="0" conaffinity="0" group="2"/> -->
+      <geom name="visual_sphere" type="sphere" size=".38" pos="0.0 0 0.065"  rgba="1 0 0 0.2" contype="0" conaffinity="0" group="2"/>
 
 
       <geom class="collision" size=".06 .027 .02" pos=".04 0 .02"/>
       <geom class="collision" size=".06 .027 .02" pos=".04 0 .06"/>
       <geom class="collision" size=".05 .027 .02" pos="-.07 0 .065"/>
       <geom class="collision" size=".023 .017 .01" pos="-.137 .008 .065" quat="1 0 0 1"/>
-      <!-- <geom name="collision_sphere" type="sphere" size=".38" pos="0.0 0 0.065"  rgba="0.8 0.8 0.8 0.2" contype="1" conaffinity="1" group="3"/> -->
+      <geom name="collision_sphere" type="sphere" size=".38" pos="0.0 0 0.065"  rgba="0.8 0.8 0.8 0.2" contype="1" conaffinity="1" group="3"/>
 
       <geom name="rotor1" class="rotor" pos="-.14 -.18 .065" mass=".25"/>
       <geom name="rotor2" class="rotor" pos=".14 -.18 .065" mass=".25"/>
@@ -58,10 +58,10 @@
   </worldbody>
 
   <actuator>
-    <motor class="x2" name="thrust1" site="thrust1" gear="0 0 1 0 0 .020"/>
-    <motor class="x2" name="thrust2" site="thrust2" gear="0 0 1 0 0  -.02"/>
-    <motor class="x2" name="thrust3" site="thrust3" gear="0 0 1 0 0  -.02"/>
-    <motor class="x2" name="thrust4" site="thrust4" gear="0 0 1 0 0 .02"/>
+    <motor class="x2" name="thrust1" site="thrust1" gear="0 0 1 0 0 .0201"/>
+    <motor class="x2" name="thrust2" site="thrust2" gear="0 0 1 0 0  -.0201"/>
+    <motor class="x2" name="thrust3" site="thrust3" gear="0 0 1 0 0  -.0201"/>
+    <motor class="x2" name="thrust4" site="thrust4" gear="0 0 1 0 0 .0201"/>
   </actuator>
 
   <sensor>

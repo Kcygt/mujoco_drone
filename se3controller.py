@@ -28,51 +28,56 @@ class SE3Controller:
         # Initialize any necessary parameters for SE(3) control
         self.k_pos = 15.0  # Position gain
         self.k_vel = 5.0   # Velocity gain
-        self.k_rot = 30.0   # Rotation gain
-        self.k_omega = 3.0 # Angular velocity gain
+        self.k_rot = 20.0   # Rotation gain
+        self.k_omega = 5.0 # Angular velocity gain
 
 
-        self.m = 0.325  # Mass of the drone in kg
+        self.m = 1.325  # Mass of the drone in kg
         self.g = np.array([0, 0, -9.81])  # Gravitational acceleration in m/s^2
 
-        self.base_inertia = np.array([[5e-2, 0, 0],
-                                      [0, 5e-2, 0],
-                                      [0, 0, 1e-3]])
+        self.base_inertia_wrt_body = np.array([[0.06, 0, 0],
+                                                [0, 0.04, 0],
+                                                [0, 0, 0.02]])
   
 
     def tracking_control(self, pos_des=[0.0, 0.0, 0.5], 
                          vel_des = np.array([0, 0, 0]), 
                          acc_des = np.array([0, 0, 0]), 
                          heading_des=[1,0,0], 
-                         omega_des = np.array([0, 0, 0]),
-                         omega_dot_des = np.array([0, 0, 0])):
+                         omega_des_local = np.array([0, 0, 0]),
+                         omega_dot_des_local = np.array([0, 0, 0])):
 
 
-        vel_des_wrt_body = np.array([self.user_cmd.pitch(), self.user_cmd.roll(), 0])  # Desired velocity based on user input
-        # Convert desired velocity from body frame to inertia frame
-        vel_des = self.se.R @ vel_des_wrt_body
+        # vel_des_wrt_body = np.array([self.user_cmd.pitch(), self.user_cmd.roll(), 0])  # Desired velocity based on user input
+        # vel_des = self.se.R @ vel_des_wrt_body # Convert desired velocity from body frame to inertia frame
         
-        pos_des[0]= self.se.base_pos[0] + vel_des[0] * 0.02  # Update desired position based on user input
-        pos_des[1]= self.se.base_pos[1] + vel_des[1] * 0.02  # Update desired position based on user input
-
+        # pos_des[0]= self.se.base_pos[0] + vel_des[0] * 0.02  # Update desired position based on user input
+        # pos_des[1]= self.se.base_pos[1] + vel_des[1] * 0.02  # Update desired position based on user input
+        # pos_des[0] = self.se.base_pos[0]
+        # pos_des[1] = self.se.base_pos[1]
         
-        yaw_des =   self.se.yaw + np.array(self.user_cmd.yaw()) * 0.1  # Desired yaw based on user input
-        heading_des = np.array([np.cos(yaw_des), np.sin(yaw_des), 0])  # Desired heading in the XY plane
+        # yaw_des =   self.se.yaw + np.array(self.user_cmd.yaw()) * 0.1  # Desired yaw based on user input
+        # heading_des = np.array([np.cos(yaw_des), np.sin(yaw_des), 0])  # Desired heading in the XY plane
         # print(f"Desired Position: {pos_des}")
         # print(f"desired yaw: {yaw_des}, heading_des: {heading_des}")
         
         acc_cmd = self.k_pos * (pos_des - self.se.base_pos) + \
-                  self.k_vel * (vel_des - self.se.base_vel[:3]) + \
+                  self.k_vel * (vel_des - self.se.base_vel_lin_global) + \
                   acc_des
+        err_pos = pos_des - self.se.base_pos
+        print(f"err_pos: {err_pos}, pos_des: {pos_des}, base_pos: {self.se.base_pos}")
+ 
+        print(f"acc_cmd: {acc_cmd}")
           
-        f_cmd  = self.m * acc_cmd - self.m * self.g  # Total force command
+        T_cmd  = self.m * acc_cmd - self.m * self.g  # Total force command
+        print(f"T_cmd: {T_cmd}", "self.m * acc_cmd :", self.m * acc_cmd , "-self.m * self.g:", -self.m * self.g)
+        T_cmd_wrt_body = self.se.R.T @ T_cmd  # Transform force command to body frame
         
-        # f =  np.dot(f_cmd, self.se.R[:, 2])  # Project the force onto the Z-axis of the drone's frame
-        f = np.dot(self.se.R.T @ f_cmd, [0, 0, 1])
-  
+        # f =  np.dot(T_cmd, self.se.R[:, 2])  # Project the force onto the Z-axis of the drone's frame
+        Tz_cmd_wrt_body = np.dot(T_cmd_wrt_body, [0, 0, 1])
+        print(f"Tz_cmd_wrt_body: {Tz_cmd_wrt_body}")
         
-        zd = f_cmd / (np.linalg.norm(f_cmd) + 1e-6)  # Normalize to get the direction of thrust
-     
+        zd = T_cmd / (np.linalg.norm(T_cmd) + 1e-6)  # Normalize to get the direction of thrust
         heading_des_unit = heading_des / np.linalg.norm(heading_des)  # Desired direction of thrust
         yd = np.cross(zd, heading_des_unit)  # Orthogonal vector to b3d and b1d
         yd = yd / (np.linalg.norm(yd) + 1e-6)
@@ -80,11 +85,26 @@ class SE3Controller:
         Rd = np.column_stack((xd, yd, zd))  # Desired rotation matrix
         
 
-        err_rot = 1/2 * vee(Rd.T @ self.se.R - self.se.R.T @ Rd)
-        err_omega = self.se.base_vel[3:6] - self.se.R.T @ Rd @ omega_des
+        # err_rot = 1/2 * vee(Rd.T @ self.se.R - self.se.R.T @ Rd)
+        # # err_rot_wrt_body = self.se.R.T @ err_rot  # Transform error to body frame
+        # err_omega_wrt_body =  omega_des_local - self.se.base_vel_ang_local 
 
-        M = - self.k_rot * err_rot - self.k_omega * err_omega \
-            + hat(self.se.base_omega) @ self.base_inertia @ self.se.base_omega \
-            - self.base_inertia @ (hat(self.se.base_omega) @ self.se.R.T @ Rd @ omega_des - self.se.R.T @ Rd @ omega_dot_des)
-        return f, M
+
+        # M_wrt_body = - self.k_rot * err_rot \
+        #              - self.k_omega * err_omega_wrt_body \
+        #              + hat(self.se.base_vel_ang_local) @ self.base_inertia_wrt_body @ self.se.base_vel_ang_local
+        
+        
+        # Rd = tf.euler_matrix(0, 0, np.deg2rad(0), axes='sxyz')[:3, :3]  # Desired rotation matrix from Euler angles
+        
+        err_rot_wrt_body = 0.5 * vee(self.se.R.T @ Rd  - Rd.T @ self.se.R)
+        err_omega_wrt_body =  omega_des_local - self.se.base_vel_ang_local 
+
+        M_wrt_body = + self.k_rot * err_rot_wrt_body \
+                     + self.k_omega * err_omega_wrt_body \
+                     + hat(self.se.base_vel_ang_local) @ self.base_inertia_wrt_body @ self.se.base_vel_ang_local \
+                    #  - self.base_inertia_wrt_body @ (hat(self.se.base_vel_ang_local) @ self.se.R.T @ Rd @ omega_des_local - self.se.R.T @ Rd @ omega_dot_des_local)
+            
+            
+        return Tz_cmd_wrt_body, M_wrt_body
 

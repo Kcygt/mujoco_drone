@@ -1,13 +1,23 @@
 
 import transformations as tf
+import mujoco
+import numpy as np
 
 class StateEstimator:
-    def __init__(self, d):
+    def __init__(self, m, d):
+        self.m = m  # Store the model object for later access
         self.d = d  # Store the data object for later access
 
     @property
-    def mass(self):
-        return 0.325  # Mass of the drone in kg
+    def total_mass(self):
+        return np.sum(self.m.body_mass)
+    
+    @property
+    def base_id(self, base_name="x2"):
+        id_ = mujoco.mj_name2id(self.m, mujoco.mjtObj.mjOBJ_BODY, base_name)
+        if id_ == -1:
+            raise ValueError(f"Body name '{base_name}' not found in the model.")
+        return id_
 
     @property
     def base_pos(self):
@@ -18,16 +28,31 @@ class StateEstimator:
         return self.d.qpos[3:7]
 
     @property
-    def base_vel(self):
+    def base_vel_local(self):
         return self.d.qvel[:6]
+
+    @property
+    def base_vel_lin_local(self):
+        return self.base_vel_local[:3]
+
+    @property
+    def base_vel_ang_local(self):
+        return self.base_vel_local[3:6]
+
+
+    @property
+    def base_vel_lin_global(self):
+        return self.rotation_matrix @ self.base_vel_lin_local
+    
+    @property
+    def base_vel_ang_global(self):
+        return self.rotation_matrix @ self.base_vel_ang_local
+        
 
     @property
     def base_omega(self):
         return self.base_vel[3:6]
 
-    @property
-    def base_acc(self):
-        return self.d.qacc[:6]
 
     @property
     def base_rpy(self):

@@ -6,7 +6,7 @@ Rotors are arraged as shown:
 
 ![alt text](drone_model.drawio.svg)
 
-![alt text](drone_model_3d.drawio.svg)
+![alt text](drone_model_3d_air.drawio.svg)
 
 $\omega_i$: angular velocity of rotor $i$
 
@@ -38,7 +38,7 @@ k_f \sum_{i=1}^4 \omega_i^2
 `$
 
 $`
-\tau^B=\left[\begin{array}{c}
+M^B=\left[\begin{array}{c}
 \tau_x \\
 \tau_y \\
 \tau_z
@@ -55,17 +55,40 @@ k_\tau\left(\omega_1^2-\omega_2^2-\omega_3^2+\omega_4^2\right)
 
 where $d$ is the distance from the rotor center to x-axis or y-aixs, here assuming they are the same.
 
+In simulation, we directly control the force of the rotor instead of the rotational velocity, the formulation is slightly different: 
+$`
+\begin{aligned}
+T & =f_1+f_2+f_3+f_4 \\
+\tau_x & =d_x\left(-f_1-f_2+f_3+f_4\right) \\
+\tau_y & =d_y\left(f_1-f_2+f_3-f_4\right) \\
+\tau_z & =k\left(f_1-f_2-f_3+f_4\right)
+\end{aligned}
+`$
+
+the inverse mapping of it is: 
+
+$`
+\begin{aligned}
+& f_1=\frac{1}{4}\left(T-\frac{\tau_x}{d_x}+\frac{\tau_y}{d_y}+\frac{\tau_z}{k}\right) \\
+& f_2=\frac{1}{4}\left(T-\frac{\tau_x}{d_x}-\frac{\tau_y}{d_y}-\frac{\tau_z}{k}\right) \\
+& f_3=\frac{1}{4}\left(T+\frac{\tau_x}{d_x}+\frac{\tau_y}{d_y}-\frac{\tau_z}{k}\right) \\
+& f_4=\frac{1}{4}\left(T+\frac{\tau_x}{d_x}-\frac{\tau_y}{d_y}+\frac{\tau_z}{k}\right)
+\end{aligned}
+`$
+
+This is what we used in simulation to map the thrust force and body moment back to motor forces and torques.
+
 ### Equation of Motion
 
 In the inertial frame, the acceleration of the quadrotor is due to thrust, gravity. We can obtain the thrust force in the inertial frame by using the rotation matrix $\mathbf{R}^I_{B}$ to map it from the body frame to the inertial frame. Thus, the linear part of the equation of motion is:
 
 $`
-m\ddot{\mathbf{p}} = \mathbf{f} + m\mathbf{g}
+m\ddot{\mathbf{p}} = \mathbf{T} + \mathbf{G}
 `$
 
 $`
 m \ddot{\mathbf{p}}=
-\mathbf{R}_B^I \mathbf{f}^B + 
+\mathbf{R}_B^I \mathbf{T}^B + 
 m\left[\begin{array}{c}
 0 \\
 0 \\
@@ -135,21 +158,21 @@ $$
 $$
 based on the Newton's Equation:
 $$
-\mathbf{f}_{cmd} = m\mathbf{a}_{cmd} - m\mathbf{g}
+\mathbf{T}_{cmd} = m\mathbf{a}_{cmd} - m\mathbf{g}
 $$
 
 then 
 $$
-\mathbf{f}_{cmd}^B = \mathbf{R}_I^B \mathbf{f}
+\mathbf{T}_{cmd}^B = \mathbf{R}_I^B \mathbf{T}_{cmd}
 $$
 The thrust would be: 
 $$
-f = \mathbf{f}_{cmd}^B \cdot [0, 0, 1]^T
+\mathbf{T}_{z,cmd}^B = \mathbf{T}_{cmd}^B \cdot [0, 0, 1]^T
 $$
 
-or can be simply the projection of $\mathbf{f}_{cmd}$ on to the $z$ axis of the body frame 
+or can be simply the projection of $\mathbf{T}_{cmd}$ on to the $z$ axis of the body frame: 
 $
-f = \mathbf{f}_{cmd} \cdot \mathbf{z}_B^I
+\mathbf{T}_{z,cmd}^B = \mathbf{T}_{cmd} \cdot \mathbf{z}_B^I
 $
 
 * Attitude Controller on SO(3)
@@ -197,6 +220,96 @@ $$
 M=-k_R e_R-k_{\Omega} e_{\Omega}+\Omega \times J \Omega-J\left(\hat{\Omega} R^T R_d \Omega_d-R^T R_d \dot{\Omega}_d\right)
 $$
 
+$$
+M^B = R_I^B M
+
+$$
+
 3. Total Control Inputs
-- Thrust: $f$
-- Moment: $M$
+- Thrust: $\mathbf{T}_{z}^B$
+- Moment: $\mathbf{M}^B$
+
+
+# Ground mode
+When the drone rolls on the ground, an additional ground reaction force is exerted on it through the contact between the cage and the ground. 
+<!-- ![alt text](drone_model_3d_ground.drawio.svg) -->
+<img src="drone_model_3d_ground.drawio.svg" width="50%"/>
+
+The dynamics is updated: 
+
+$`
+m \ddot{\mathbf{p}}=\mathbf{T}+\mathbf{G}+\mathbf{F}_C
+`$
+
+The rotational part is also upated: 
+
+$`
+\mathbf{I} \dot{\omega}+\omega \times\left(\mathbf{I}\omega\right)=\mathbf{M} + \mathbf{r}_C \times \mathbf{F}_C
+`$
+
+However, the small angular velocity assumption no longer holds in gorund mode, as the robot relies on rotation for movement.
+We need to take the byroscopic term into consideration.
+
+In terms of control, the robot has 5 DoFs (2 translations and 3 rotations), however, the two translational DoFs are coupled with two orientational DoFs due to nonholonomic rolling constraints. 
+
+The nonholonomic rolling constraints could be expressed as zero contact point velocity in inertial frame: 
+
+$`
+\mathbf{v}_{\text {contact }}=\dot{\mathbf{p}}+\boldsymbol{\omega} \times(-R \hat{z})=\dot{\mathbf{p}}-R \boldsymbol{\omega} \times \hat{z} = 0
+`$
+
+where $\mathbf{p}$ is the location of the body frame, $R$ is the radius of the sphere cage. 
+The equation indicates that no slip in x, y direction and no bump in z direction. Another implecit assumption made here is that the ground is flat so that the contact point in right below the center of mass of the robot. 
+
+The relation can be simplified as: 
+
+$`
+{\mathbf{v}}=R \omega \times \hat{{z}}
+`$
+
+This can be solved as: 
+
+$`
+\begin{aligned}
+& v_x=R \omega_y \\
+& v_y=-R \omega_x
+\end{aligned}
+`$
+
+Our primary goal is navigation, so we choose to control the two translational DoFs instead of the rotational DoFs. 
+
+Given desired location $x_d$, $y_d$, the desired position can be $\mathbf{p}_d =[x_d, y_d, R] $.
+
+Based on the desired location, we can calculate the required command acceleration to reach the target:
+$$
+\mathbf{a}_{cmd} = k_p(\mathbf{p}_{des}-\mathbf{p})+k_d(\mathbf{v}_{des}-\mathbf{v})+\mathbf{a}_{des}
+$$
+
+Based on the Newton's Equation,
+
+$`
+\mathbf{T}_{cmd} + \mathbf{F}_{C,cmd} = m \mathbf{a}_{cmd} - G
+`$
+
+as we know the desired location and current location, we can have: 
+
+$`
+{\mathbf{v}}_{cmd} = k_p(\mathbf{p}_{des} - \mathbf{p}) + k_d(\mathbf{v}_{des}-\mathbf{v})
+`$
+
+then from the nonholonomic constraints $`
+{\mathbf{v}}=R \omega \times \hat{{z}}
+`$, the commanded angular velocity can be calculated: 
+
+$`
+\begin{aligned}
+& \omega_{x,cmd} = - v_{y,cmd}/R \\ 
+& \omega_{y,cmd}=v_{x,cmd}/R  
+\end{aligned}
+`$
+
+The command moment can be:
+
+$`
+M=-k_{\omega} {\omega}_{cmd}+\omega \times \mathbf{I} \omega
+`$

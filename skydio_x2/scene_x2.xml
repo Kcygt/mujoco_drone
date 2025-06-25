@@ -1,6 +1,6 @@
 <mujoco model="Skydio X2 scene">
   <include file="x2.xml"/>
-
+ <option gravity="0 0 -9.81"/> 
   <statistic center="0 0 0.1" extent="0.6" meansize=".05"/>
 
   <visual>
