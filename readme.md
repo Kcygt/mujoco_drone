@@ -148,7 +148,11 @@ $`
 
 ## SE(3) control
 
-Lee, Taeyoung, Melvin Leok, and N. Harris McClamroch. "Geometric tracking control of a quadrotor UAV on SE (3)." 49th IEEE conference on decision and control (CDC). IEEE, 2010.
+[1] Lee, Taeyoung, Melvin Leok, and N. Harris McClamroch. "Geometric tracking control of a quadrotor UAV on SE (3)." 49th IEEE conference on decision and control (CDC). IEEE, 2010.
+
+[2] Yun Yu, Shuo Yang, Mingxi Wang, Cheng Li, and Zexiang Li, ‘High performance full attitude control of a quadrotor on SO(3)’, in 2015 IEEE International Conference on Robotics and Automation (ICRA), Seattle, WA, USA: IEEE, May 2015, pp. 1698–1703. doi: 10.1109/ICRA.2015.7139416.
+
+
 
 * Position Controller on SO(3)
 
@@ -204,26 +208,21 @@ $`
 `$
 
 
-Defines rotation error:
-
-$$
-\begin{gathered}
-e_R=\frac{1}{2}\left(R_d^T R-R^T R_d\right)^{\vee} \\
-e_{\Omega}=\Omega-R^T R_d \Omega_d
-\end{gathered}
-$$
-
 
 Then the moment command is:
 
-$$
-M=-k_R e_R-k_{\Omega} e_{\Omega}+\Omega \times J \Omega-J\left(\hat{\Omega} R^T R_d \Omega_d-R^T R_d \dot{\Omega}_d\right)
-$$
+$`
+\tau=K_P\log (R^TR_d) + K_D (^b\omega_d-^b\omega) + ^b\omega \times ^bJ ^b\omega
+`$
 
-$$
-M^B = R_I^B M
+And log is calculated as:
 
-$$
+$`
+\log (R)=\frac{\phi}{2 \sin \phi}\left(R-R^T\right)^{\vee} \quad \in \mathfrak{s o}(3)
+`$
+
+in which $\phi$ is $\cos ^{-1}\left(\frac{\operatorname{tr}(R)-1}{2}\right)$ and $|\phi|<\pi$. 
+
 
 3. Total Control Inputs
 - Thrust: $\mathbf{T}_{z}^B$

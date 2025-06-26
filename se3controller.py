@@ -19,6 +19,14 @@ def vee(omega_hat):
         omega_hat[1,0]
     ])
 
+def log(R):
+    """Compute the logarithm of a rotation matrix."""
+    theta = np.arccos((np.trace(R) - 1) / 2)
+    if np.isclose(theta, 0):
+        return np.zeros(3)
+    return theta / (2 * np.sin(theta)) * vee(R - R.T)
+
+
 class SE3Controller:
     def __init__(self, state_estimator=None, user_cmd=None):
         if user_cmd is not None:
@@ -26,8 +34,8 @@ class SE3Controller:
             
         self.se = state_estimator
         # Initialize any necessary parameters for SE(3) control
-        self.k_pos = 15.0  # Position gain
-        self.k_vel = 5.0   # Velocity gain
+        self.k_pos = 10.0  # Position gain
+        self.k_vel = 6.0   # Velocity gain
         self.k_rot = 20.0   # Rotation gain
         self.k_omega = 5.0 # Angular velocity gain
 
@@ -86,25 +94,25 @@ class SE3Controller:
         
 
         # err_rot = 1/2 * vee(Rd.T @ self.se.R - self.se.R.T @ Rd)
-        # # err_rot_wrt_body = self.se.R.T @ err_rot  # Transform error to body frame
-        # err_omega_wrt_body =  omega_des_local - self.se.base_vel_ang_local 
+        # err_omega_wrt_body =  self.se.base_vel_ang_local - self.se.R.T @ Rd @ omega_des_local  
 
 
         # M_wrt_body = - self.k_rot * err_rot \
         #              - self.k_omega * err_omega_wrt_body \
         #              + hat(self.se.base_vel_ang_local) @ self.base_inertia_wrt_body @ self.se.base_vel_ang_local
+        #              - self.base_inertia_wrt_body @ (hat(self.se.base_vel_ang_local) @ self.se.R.T @ Rd @ omega_des_local - self.se.R.T @ Rd @ omega_dot_des_local)
+            
         
-        
-        # Rd = tf.euler_matrix(0, 0, np.deg2rad(0), axes='sxyz')[:3, :3]  # Desired rotation matrix from Euler angles
-        
-        err_rot_wrt_body = 0.5 * vee(self.se.R.T @ Rd  - Rd.T @ self.se.R)
+
+        # err_rot_wrt_body = 0.5 * vee(self.se.R.T @ Rd  - Rd.T @ self.se.R)
+        err_rot_wrt_body = log(self.se.R.T @ Rd)  # Logarithm of the rotation matrix difference
+
         err_omega_wrt_body =  omega_des_local - self.se.base_vel_ang_local 
 
-        M_wrt_body = + self.k_rot * err_rot_wrt_body \
+        M_wrt_body = self.k_rot * err_rot_wrt_body \
                      + self.k_omega * err_omega_wrt_body \
-                     + hat(self.se.base_vel_ang_local) @ self.base_inertia_wrt_body @ self.se.base_vel_ang_local \
-                    #  - self.base_inertia_wrt_body @ (hat(self.se.base_vel_ang_local) @ self.se.R.T @ Rd @ omega_des_local - self.se.R.T @ Rd @ omega_dot_des_local)
-            
+                     + hat(self.se.base_vel_ang_local) @ self.base_inertia_wrt_body @ self.se.base_vel_ang_local
+                     
             
         return Tz_cmd_wrt_body, M_wrt_body
 
