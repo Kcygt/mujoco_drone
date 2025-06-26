@@ -15,6 +15,14 @@ def vee(omega_hat):
     return np.array([omega_hat[2, 1], omega_hat[0, 2], omega_hat[1, 0]])
 
 
+def log(R):
+    """Compute the logarithm of a rotation matrix."""
+    theta = np.arccos((np.trace(R) - 1) / 2)
+    if np.isclose(theta, 0):
+        return np.zeros(3)
+    return theta / (2 * np.sin(theta)) * vee(R - R.T)
+
+
 class SE3Controller:
     def __init__(self, state_estimator=None, user_cmd=None):
         if user_cmd is not None:
