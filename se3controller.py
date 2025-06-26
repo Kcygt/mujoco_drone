@@ -47,7 +47,7 @@ class SE3Controller:
         pos_des=[0.0, 0.0, 0.5],
         vel_des=np.array([0, 0, 0]),
         acc_des=np.array([0, 0, 0]),
-        heading_des=[1, 0, 0],
+        heading_des=[0, 0, 0],
         omega_des_local=np.array([0, 0, 0]),
         omega_dot_des_local=np.array([0, 0, 0]),
     ):

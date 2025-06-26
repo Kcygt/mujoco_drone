@@ -34,6 +34,8 @@
     <body name="x2" pos="0 0 0.1" childclass="x2">
       <freejoint/>
       <camera name="track" pos="-1 0 .5" xyaxes="0 -1 0 1 0 2" mode="trackcom"/>
+      <camera name="drone_cam" pos="0 -.7  0.2" xyaxes=" 1 0 0 0 0 1" mode="fixed" fovy="45"/>
+
       <site name="imu" pos="0 0 .02"/>
       <geom material="phong3SG" mesh="X2_lowpoly" class="visual" quat="0 0 1 1"/>
       <!-- <geom name="visual_sphere" type="sphere" size=".38" pos="0.0 0 0.065"  rgba="1 0 0 0.2" contype="0" conaffinity="0" group="2"/> -->

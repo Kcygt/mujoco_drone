@@ -5,6 +5,10 @@ class UserCommand:
     def __init__(self):
         self.gamepad_reader = GamepadReader()
         self.gamepad_reader.start()
+        self.x = 0.5  # start roughly centered
+        self.y = 0.5
+        self.z = 0.5
+        self.yaw = 0.0  # desired yaw rate or angle
 
     def get_input(self):
         axes = self.gamepad_reader.get_axes()

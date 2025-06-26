@@ -4,7 +4,7 @@ import mujoco.viewer
 import numpy as np
 import transformations as tf
 import time
-
+import pygame 
 from pid_controller import PIDController
 from se3controller import SE3Controller
 from state_estimator import StateEstimator
@@ -84,6 +84,7 @@ class Drone:
         f3 = (T + tau_x / dx + tau_y / dy - tau_z / k) / gain
         f4 = (T + tau_x / dx - tau_y / dy + tau_z / k) / gain
         return np.array([f1, f2, f3, f4])
+    
 
     def set_motor_cmd(self, motor_cmd):
         # Set the motor commands to the actuators
