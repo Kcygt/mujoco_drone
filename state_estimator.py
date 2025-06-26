@@ -28,39 +28,8 @@ class StateEstimator:
         return self.d.qpos[3:7]
 
     @property
-    def base_vel_local(self):
-        return self.d.qvel[:6]
-
-    @property
-    def base_vel_lin_local(self):
-        return self.base_vel_local[:3]
-
-    @property
-    def base_vel_ang_local(self):
-        return self.base_vel_local[3:6]
-
-
-    @property
-    def base_vel_lin_global(self):
-        return self.rotation_matrix @ self.base_vel_lin_local
-    
-    @property
-    def base_vel_ang_global(self):
-        return self.rotation_matrix @ self.base_vel_ang_local
-        
-
-    @property
-    def base_omega(self):
-        return self.base_vel[3:6]
-
-
-    @property
     def base_rpy(self):
         return tf.euler_from_quaternion(self.base_quat)
-    
-    @property
-    def alt(self):
-        return self.d.qpos[2]
     
     @property
     def roll(self):
@@ -81,3 +50,24 @@ class StateEstimator:
     @property
     def R(self):
         return self.rotation_matrix
+    
+
+    @property
+    def base_vel_lin_global(self):
+        return self.d.qvel[:3]
+
+    @property
+    def base_vel_ang_local(self):
+        return self.d.qvel[3:6]
+
+    @property
+    def base_vel_lin_local(self):
+        return self.R.T @ self.base_vel_lin_global
+    
+    @property
+    def base_vel_ang_global(self):
+        return self.R @ self.base_vel_ang_local
+    
+
+
+
