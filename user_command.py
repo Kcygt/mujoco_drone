@@ -1,13 +1,13 @@
-
 from gamepad_reader import GamepadReader
+
 
 class UserCommand:
     def __init__(self):
         self.gamepad_reader = GamepadReader()
         self.gamepad_reader.start()
-        self.x = 0.5  # start roughly centered
-        self.y = 0.5
-        self.z = 0.5
+        self.x = 0.0  # start roughly centered
+        self.y = 0.0
+        self.z = 0.1
         self.yaw = 0.0  # desired yaw rate or angle
 
     def get_input(self):
@@ -18,7 +18,6 @@ class UserCommand:
     def stop(self):
         self.gamepad_reader.stop()
 
-
     def throttle(self, lim=1.0, deadzone=0.05):
         axes, _ = self.get_input()
         val = -axes[1] * lim
@@ -27,13 +26,11 @@ class UserCommand:
     def yaw(self, lim=1.0):
         axes, _ = self.get_input()
         return -axes[0] * lim
-    
-    
+
     def roll(self, lim=1.0):
         axes, _ = self.get_input()
-        return -axes[3] * lim  
-    
+        return -axes[3] * lim
+
     def pitch(self, lim=1.0):
         axes, _ = self.get_input()
-        return -axes[4] * lim  
-    
+        return -axes[4] * lim

@@ -25,6 +25,11 @@ def log(R):
 
 class SE3Controller:
     def __init__(self, state_estimator=None, user_cmd=None):
+
+        self.state_estimator = state_estimator  # this line is missing or broken!
+        self.user_cmd = user_cmd
+        self.mass = 1.0  # or set your actual drone mass
+
         if user_cmd is not None:
             self.user_cmd = user_cmd
 
@@ -42,9 +47,9 @@ class SE3Controller:
             [[0.06, 0, 0], [0, 0.04, 0], [0, 0, 0.02]]
         )
 
-    def tracking_control(
+    def tracking_waypoint(
         self,
-        pos_des=[0.1, 0.1, 0.5],
+        pos_des=[0.0, 0.0, 0.1],
         vel_des=np.array([0, 0, 0]),
         acc_des=np.array([0, 0, 0]),
         heading_des=[0, 0, 0],
@@ -111,3 +116,62 @@ class SE3Controller:
         )  #  - self.base_inertia_wrt_body @ (hat(self.se.base_vel_ang_local) @ self.se.R.T @ Rd @ omega_des_local - self.se.R.T @ Rd @ omega_dot_des_local)
 
         return Tz_cmd_wrt_body, M_wrt_body
+
+    def tracking_trajectory(self, pos_des, vel_des, heading_des):
+        # Constants
+        g = 9.81  # gravity
+        m = self.m  # mass of drone
+
+        # Feedforward desired acceleration and angular velocity/acceleration (set to zero if unavailable)
+        acc_des = np.zeros(3)
+        omega_des_local = np.zeros(3)
+        omega_dot_des_local = np.zeros(3)
+
+        # Position and velocity errors
+        err_pos = pos_des - self.se.base_pos
+        err_vel = vel_des - self.se.base_vel_lin_global
+
+        # Control gains (assumed to be defined as self.k_pos, self.k_vel, etc.)
+        acc_cmd = self.k_pos * err_pos + self.k_vel * err_vel + acc_des
+
+        # Total thrust force command (gravity compensated)
+        T_cmd = m * (acc_cmd + np.array([0, 0, g]))
+
+        # Transform thrust to body frame
+        T_cmd_wrt_body = self.se.R.T @ T_cmd
+
+        # Project thrust onto body z-axis (thrust magnitude)
+        thrust = T_cmd_wrt_body[2]  # same as dot with [0,0,1]
+
+        # Desired thrust direction (b3d)
+        zd = T_cmd / (np.linalg.norm(T_cmd) + 1e-6)
+
+        # Desired heading vector (b1d)
+        heading_des_unit = heading_des / (np.linalg.norm(heading_des) + 1e-6)
+
+        # Construct desired rotation matrix Rd from zd and heading vector
+        yd = np.cross(zd, heading_des_unit)
+        yd /= np.linalg.norm(yd) + 1e-6
+        xd = np.cross(yd, zd)
+        Rd = np.column_stack((xd, yd, zd))
+
+        # Rotation error (using vee operator for SO(3) error)
+        err_rot = 0.5 * vee(Rd.T @ self.se.R - self.se.R.T @ Rd)
+
+        # Angular velocity error in body frame
+        err_omega = omega_des_local - self.se.base_vel_ang_local
+
+        # Moment command (PD + Coriolis compensation)
+        M_wrt_body = (
+            self.k_rot * err_rot
+            + self.k_omega * err_omega
+            + hat(self.se.base_vel_ang_local)
+            @ self.base_inertia_wrt_body
+            @ self.se.base_vel_ang_local
+        )
+
+        return thrust, M_wrt_body
+
+    def compute_moments(self, heading_des):
+        # For example: simple zero moment control
+        return np.array([0.0, 0.0, 0.0])

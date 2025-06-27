@@ -51,15 +51,15 @@ class Drone:
         pygame.event.pump()
 
         if self.joystick:
-            deadzone = 0.1
-            max_vel_xy = 1.0  # [m/s]
-            max_vel_z = 0.5  # [m/s]
-            max_yaw_rate = 0.8  # [rad/s]
+            deadzone = 0.3
+            max_vel_xy = 15.0  # [m/s]
+            max_vel_z = 15  # [m/s]
+            max_yaw_rate = 1.2  # [rad/s]
 
             # Read joystick axes
             axis_x = self.joystick.get_axis(0)  # Left stick X → left/right
             axis_y = self.joystick.get_axis(1)  # Left stick Y → forward/back
-            axis_z = self.joystick.get_axis(4)  # Right stick Y → up/down
+            axis_z = self.joystick.get_axis(3)  # Right stick Y → up/down
 
             # Apply deadzone filtering
             vel_x_cmd = vel_y_cmd = vel_z_cmd = 0.0
@@ -81,7 +81,7 @@ class Drone:
             self.user_cmd.z += vel_z_cmd * dt
 
             # Clamp desired altitude
-            self.user_cmd.z = np.clip(self.user_cmd.z, 0.1, 2.0)
+            self.user_cmd.z = np.clip(self.user_cmd.z, 0.1, 20.0)
 
             # Buttons or triggers for yaw
             lb = self.joystick.get_button(4)  # LB

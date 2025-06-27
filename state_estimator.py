@@ -1,7 +1,7 @@
-
 import transformations as tf
 import mujoco
 import numpy as np
+
 
 class StateEstimator:
     def __init__(self, m, d):
@@ -11,7 +11,7 @@ class StateEstimator:
     @property
     def total_mass(self):
         return np.sum(self.m.body_mass)
-    
+
     @property
     def base_id(self, base_name="x2"):
         id_ = mujoco.mj_name2id(self.m, mujoco.mjtObj.mjOBJ_BODY, base_name)
@@ -30,27 +30,26 @@ class StateEstimator:
     @property
     def base_rpy(self):
         return tf.euler_from_quaternion(self.base_quat)
-    
+
     @property
     def roll(self):
         return self.base_rpy[0]
-    
+
     @property
     def pitch(self):
         return self.base_rpy[1]
-    
+
     @property
     def yaw(self):
         return self.base_rpy[2]
-    
+
     @property
     def rotation_matrix(self):
         return tf.quaternion_matrix(self.base_quat)[:3, :3]
-    
+
     @property
     def R(self):
         return self.rotation_matrix
-    
 
     @property
     def base_vel_lin_global(self):
@@ -63,11 +62,13 @@ class StateEstimator:
     @property
     def base_vel_lin_local(self):
         return self.R.T @ self.base_vel_lin_global
-    
+
     @property
     def base_vel_ang_global(self):
         return self.R @ self.base_vel_ang_local
-    
 
+    def get_position(self):
+        return self.d.qpos[:3].copy()
 
-
+    def get_velocity(self):
+        return self.d.qvel[:3].copy()

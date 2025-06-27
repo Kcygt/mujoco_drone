@@ -4,7 +4,7 @@ import numpy as np
 
 
 class PIDController:
-    def __init__(self, z_des=0.5, rpy_setpoint=[0, 0, 0], state_estimator=None):
+    def __init__(self, z_des=0.1, rpy_setpoint=[0, 0, 0], state_estimator=None):
         self.state_estimator = state_estimator
         self.pid_alt = PID(6, 0.5, 1.25, z_des)
         self.pid_roll = PID(
