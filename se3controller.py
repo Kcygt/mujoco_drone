@@ -44,7 +44,7 @@ class SE3Controller:
 
     def tracking_control(
         self,
-        pos_des=[0.0, 0.0, 0.5],
+        pos_des=[0.1, 0.1, 0.5],
         vel_des=np.array([0, 0, 0]),
         acc_des=np.array([0, 0, 0]),
         heading_des=[0, 0, 0],
